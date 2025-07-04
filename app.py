@@ -8,7 +8,7 @@ import os
 from scipy.stats.mstats import winsorize
 
 # ===================================================================================
-# Definisi Fungsi Pra-pemrosesan (Sama seperti di Notebook Colab)
+# Definisi Fungsi Pra-pemrosesan
 # ===================================================================================
 def winsorize_series_robust(df_or_series, column_name=None, limits=(0.01, 0.01)):
     if isinstance(df_or_series, pd.DataFrame):
@@ -83,72 +83,49 @@ def load_pickled_model(model_path):
         with open(model_path, 'rb') as file:
             model = pickle.load(file)
         return model
-    except FileNotFoundError:
-        st.error(f"File model '{model_path}' tidak ditemukan. Pastikan file ada di direktori yang sama dengan aplikasi.")
-        return None
-    except pickle.UnpicklingError as e:
-        st.error(f"Terjadi kesalahan saat unpickling model: {e}. File model mungkin rusak atau tidak kompatibel.")
-        return None
-    except ModuleNotFoundError as e:
-        st.error(f"Terjadi kesalahan saat memuat model (ModuleNotFoundError): {e}. Pastikan semua library yang dibutuhkan model ada di requirements.txt.")
-        return None
     except Exception as e:
-        st.error(f"Terjadi kesalahan umum saat memuat model: {e}")
+        st.error(f"Gagal memuat model: {e}")
         return None
 
 MODEL_FILENAME = 'XGBoost_SKLearn_Pipeline_Final.pkl'
 pipeline_model = load_pickled_model(MODEL_FILENAME)
 
 # ===================================================================================
-# HTML Template Placeholder
-# ===================================================================================
-PRIMARY_BG_COLOR = "#003366"
-PRIMARY_TEXT_COLOR = "#FFFFFF"
-ACCENT_COLOR = "#FFD700"
-HTML_BANNER = """..."""
-HTML_FOOTER = """..."""
-
-# ===================================================================================
 # Fungsi Utama Aplikasi
 # ===================================================================================
 def main():
-    stc.html(HTML_BANNER, height=170)
+    st.title("🚲 Prediksi Permintaan Sewa Sepeda")
+    st.markdown("Selamat datang di aplikasi prediksi permintaan sepeda berbasis machine learning!")
+
     menu_options = {
         "🏠 Beranda": show_homepage,
         "⚙️ Aplikasi Prediksi": run_prediction_app,
         "📖 Info Model": show_model_info_page
     }
-    # ✅ FIX: Tambahkan label agar tidak kosong
-    choice = st.sidebar.radio("Navigasi", list(menu_options.keys()), label_visibility="collapsed")
+    choice = st.sidebar.radio("Pilih Halaman", list(menu_options.keys()), label_visibility="collapsed")
 
     if pipeline_model is None and choice == "⚙️ Aplikasi Prediksi":
         st.error("MODEL PREDIKSI GAGAL DIMUAT. Halaman prediksi tidak dapat ditampilkan.")
-        st.markdown("Silakan periksa file model dan log, atau hubungi administrator.")
     else:
         menu_options[choice]()
 
-    stc.html(HTML_FOOTER, height=70)
-
 # ===================================================================================
-# Placeholder fungsi halaman
+# Fungsi Halaman
 # ===================================================================================
 def show_homepage():
-    st.markdown("## Selamat Datang di Dasbor Prediksi Permintaan Sepeda!")
-    st.image("https://img.freepik.com/free-photo/row-parked-rental-bikes_53876-63261.jpg", 
-             caption="Inovasi Transportasi Perkotaan dengan Berbagi Sepeda", use_container_width=True)
-    # (Tambahkan konten lainnya sesuai kebutuhan)
+    st.header("🏠 Beranda")
+    st.image("https://img.freepik.com/free-photo/row-parked-rental-bikes_53876-63261.jpg",
+             caption="Inovasi Transportasi Perkotaan dengan Berbagi Sepeda",
+             use_container_width=True)
+    st.write("Aplikasi ini menggunakan model machine learning untuk memprediksi permintaan penyewaan sepeda berdasarkan waktu dan kondisi cuaca.")
 
 def run_prediction_app():
-    st.markdown("## ⚙️ Masukkan Parameter untuk Prediksi")
-    st.info("Form input dan prediksi model ditampilkan di sini.")
-    # (Placeholder fungsi prediksi)
-
-def show_model_info_page():
-    st.markdown("## 📖 Info Model")
-    st.write("Model ini menggunakan XGBoost dan pipeline Scikit-learn untuk memprediksi permintaan sepeda.")
-
-# ===================================================================================
-# Jalankan Aplikasi
-# ===================================================================================
-if __name__ == '__main__':
-    main()
+    st.header("⚙️ Aplikasi Prediksi")
+    with st.form(key='prediction_form'):
+        date_input = st.date_input("Tanggal", datetime.date(2012, 12, 19))
+        hour_input = st.slider("Jam (0–23)", 0, 23, 12)
+        temp_input = st.number_input("Suhu (Celsius)", min_value=-10.0, max_value=50.0, value=25.0)
+        humidity_input = st.slider("Kelembaban (%)", 0, 100, 60)
+        windspeed_input = st.slider("Kecepatan Angin", 0.0, 1.0, 0.25)
+        season_input = st.selectbox("Musim", [1, 2, 3, 4])
+        weather_input = st.selectbox("Cuaca", [
