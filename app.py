@@ -128,4 +128,37 @@ def run_prediction_app():
         humidity_input = st.slider("Kelembaban (%)", 0, 100, 60)
         windspeed_input = st.slider("Kecepatan Angin", 0.0, 1.0, 0.25)
         season_input = st.selectbox("Musim", [1, 2, 3, 4])
-        weather_input = st.selectbox("Cuaca", [
+        weather_input = st.selectbox("Cuaca", [1, 2, 3, 4])
+        submit_button = st.form_submit_button(label='Prediksi')
+
+    if submit_button:
+        dt_combined = datetime.datetime.combine(date_input, datetime.time(hour_input))
+        df = pd.DataFrame({
+            'datetime': [dt_combined],
+            'season': [season_input],
+            'holiday': [0],
+            'workingday': [1],
+            'weather': [weather_input],
+            'temp': [temp_input],
+            'humidity': [humidity_input],
+            'windspeed': [windspeed_input]
+        })
+
+        df = preprocess_initial_features(df)
+        df = create_cyclical_features(df)
+
+        try:
+            prediction = pipeline_model.predict(df)
+            st.success(f"🎯 Estimasi Jumlah Peminjam Sepeda: {int(prediction[0]):,} orang")
+        except Exception as e:
+            st.error(f"Terjadi kesalahan saat prediksi: {e}")
+
+def show_model_info_page():
+    st.header("📖 Info Model")
+    st.write("Model ini menggunakan algoritma XGBoost dan pipeline Scikit-learn untuk memproses data waktu dan cuaca menjadi prediksi jumlah peminjam sepeda.")
+
+# ===================================================================================
+# Jalankan Aplikasi
+# ===================================================================================
+if __name__ == '__main__':
+    main()
